@@ -10,8 +10,8 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
+from registration.documents import RegistrationProfile
 from registration.forms import RegistrationForm
-from registration.models import RegistrationProfile
 
 
 def activate(request, activation_key,
@@ -61,7 +61,7 @@ def activate(request, activation_key,
     
     """
     activation_key = activation_key.lower() # Normalize before trying anything with it.
-    account = RegistrationProfile.objects.activate_user(activation_key)
+    account = RegistrationProfile.activate_user(activation_key)
     if extra_context is None:
         extra_context = {}
     context = RequestContext(request)
@@ -74,7 +74,7 @@ def activate(request, activation_key,
 
 
 def register(request, success_url=None,
-             form_class=RegistrationForm, profile_callback=None,
+             form_class=RegistrationForm,
              template_name='registration/registration_form.html',
              extra_context=None):
     """
@@ -145,7 +145,7 @@ def register(request, success_url=None,
     if request.method == 'POST':
         form = form_class(data=request.POST, files=request.FILES)
         if form.is_valid():
-            new_user = form.save(profile_callback=profile_callback)
+            new_user = form.save()
             # success_url needs to be dynamically generated here; setting a
             # a default value using reverse() will cause circular-import
             # problems with the default URLConf for this application, which

@@ -23,14 +23,14 @@ import datetime
 import sha
 
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.core import mail
 from django.core import management
 from django.core.urlresolvers import reverse
 from django.test import TestCase
+from mongoengine.django.auth import User
 
 from registration import forms
-from registration.models import RegistrationProfile
+from registration.documents import RegistrationProfile
 
 
 class RegistrationTestCase(TestCase):
@@ -41,13 +41,12 @@ class RegistrationTestCase(TestCase):
     
     """
     def setUp(self):
-        self.sample_user = RegistrationProfile.objects.create_inactive_user(username='alice',
-                                                                            password='secret',
-                                                                            email='alice@example.com')
-        self.expired_user = RegistrationProfile.objects.create_inactive_user(username='bob',
-                                                                             password='swordfish',
-                                                                             email='bob@example.com')
-        self.expired_user.date_joined -= datetime.timedelta(days=settings.ACCOUNT_ACTIVATION_DAYS + 1)
+        self.sample_user = RegistrationProfile.create_inactive_user(
+            username='alice', password='secret', email='alice@example.com')
+        self.expired_user = RegistrationProfile.create_inactive_user(
+            username='bob', password='swordfish', email='bob@example.com')
+        self.expired_user.date_joined -= datetime.timedelta(
+            days=settings.ACCOUNT_ACTIVATION_DAYS + 1)
         self.expired_user.save()
 
 
@@ -86,24 +85,28 @@ class RegistrationModelTests(RegistrationTestCase):
         
         """
         # Activating a valid user returns the user.
-        self.failUnlessEqual(RegistrationProfile.objects.activate_user(RegistrationProfile.objects.get(user=self.sample_user).activation_key).pk,
-                             self.sample_user.pk)
+        self.failUnlessEqual(RegistrationProfile.activate_user(
+            self.sample_user.activation_key).pk, self.sample_user.pk)
         
         # The activated user must now be active.
         self.failUnless(User.objects.get(pk=self.sample_user.pk).is_active)
         
         # The activation key must now be reset to the "already activated" constant.
-        self.failUnlessEqual(RegistrationProfile.objects.get(user=self.sample_user).activation_key,
-                             RegistrationProfile.ACTIVATED)
+        self.failUnlessEqual(
+            RegistrationProfile.objects.get(
+                user=self.sample_user).activation_key,
+            RegistrationProfile.ACTIVATED)
         
         # Activating an expired user returns False.
-        self.failIf(RegistrationProfile.objects.activate_user(RegistrationProfile.objects.get(user=self.expired_user).activation_key))
+        self.failIf(RegistrationProfile.activate_user(
+            self.expired_user.activation_key))
         
         # Activating from a key that isn't a SHA1 hash returns False.
-        self.failIf(RegistrationProfile.objects.activate_user('foo'))
+        self.failIf(RegistrationProfile.activate_user('foo'))
         
         # Activating from a key that doesn't exist returns False.
-        self.failIf(RegistrationProfile.objects.activate_user(sha.new('foo').hexdigest()))
+        self.failIf(RegistrationProfile.activate_user(
+            sha.new('foo').hexdigest()))
 
     def test_account_expiration_condition(self):
         """
@@ -113,14 +116,14 @@ class RegistrationModelTests(RegistrationTestCase):
         
         """
         # Unexpired user returns False.
-        self.failIf(RegistrationProfile.objects.get(user=self.sample_user).activation_key_expired())
+        self.failIf(self.sample_user.activation_key_expired())
 
         # Expired user returns True.
-        self.failUnless(RegistrationProfile.objects.get(user=self.expired_user).activation_key_expired())
+        self.failUnless(self.expired_user.activation_key_expired())
 
         # Activated user returns True.
-        RegistrationProfile.objects.activate_user(RegistrationProfile.objects.get(user=self.sample_user).activation_key)
-        self.failUnless(RegistrationProfile.objects.get(user=self.sample_user).activation_key_expired())
+        RegistrationProfile.activate_user(self.sample_user.activation_key)
+        self.failUnless(self.sample_user.activation_key_expired())
 
     def test_expired_user_deletion(self):
         """
@@ -129,7 +132,7 @@ class RegistrationModelTests(RegistrationTestCase):
         only inactive users whose activation window has expired.
         
         """
-        RegistrationProfile.objects.delete_expired_users()
+        RegistrationProfile.delete_expired_users()
         self.assertEqual(RegistrationProfile.objects.count(), 1)
 
     def test_management_command(self):
@@ -298,13 +301,13 @@ class RegistrationViewTests(RegistrationTestCase):
         """
         # Valid user puts the user account into the context.
         response = self.client.get(reverse('registration_activate',
-                                           kwargs={ 'activation_key': RegistrationProfile.objects.get(user=self.sample_user).activation_key }))
+                                           kwargs={ 'activation_key': self.sample_user.activation_key }))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['account'].pk, self.sample_user.pk)
 
         # Expired user sets the account to False.
         response = self.client.get(reverse('registration_activate',
-                                           kwargs={ 'activation_key': RegistrationProfile.objects.get(user=self.expired_user).activation_key }))
+                                           kwargs={ 'activation_key': self.expired_user.activation_key }))
         self.failIf(response.context['account'])
 
         # Invalid key gets to the view, but sets account to False.

@@ -6,16 +6,15 @@ Forms and validation code for user registration.
 
 from django import forms
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.auth.models import User
 
-from registration.models import RegistrationProfile
+from registration.documents import RegistrationProfile
 
 
 # I put this on all required fields, because it's easier to pick up
 # on them with CSS or JavaScript if they have a class of "required"
 # in the HTML. Your mileage may vary. If/when Django ticket #3515
 # lands in trunk, this will no longer be necessary.
-attrs_dict = { 'class': 'required' }
+attrs_dict = {'class': 'required'}
 
 
 class RegistrationForm(forms.Form):
@@ -48,13 +47,15 @@ class RegistrationForm(forms.Form):
         """
         Validate that the username is alphanumeric and is not already
         in use.
-        
+
         """
-        try:
-            user = User.objects.get(username__iexact=self.cleaned_data['username'])
-        except User.DoesNotExist:
-            return self.cleaned_data['username']
-        raise forms.ValidationError(_(u'This username is already taken. Please choose another.'))
+        if RegistrationProfile.objects(
+            username__iexact=self.cleaned_data['username']):
+            
+            raise forms.ValidationError(
+                _(u'This username is already taken. Please choose another.'))
+        
+        return self.cleaned_data['username']
 
     def clean(self):
         """
@@ -69,7 +70,7 @@ class RegistrationForm(forms.Form):
                 raise forms.ValidationError(_(u'You must type the same password each time'))
         return self.cleaned_data
     
-    def save(self, profile_callback=None):
+    def save(self):
         """
         Create the new ``User`` and ``RegistrationProfile``, and
         returns the ``User``.
@@ -81,10 +82,10 @@ class RegistrationForm(forms.Form):
         supplied.
         
         """
-        new_user = RegistrationProfile.objects.create_inactive_user(username=self.cleaned_data['username'],
-                                                                    password=self.cleaned_data['password1'],
-                                                                    email=self.cleaned_data['email'],
-                                                                    profile_callback=profile_callback)
+        new_user = RegistrationProfile.create_inactive_user(
+            username=self.cleaned_data['username'],
+            password=self.cleaned_data['password1'],
+            email=self.cleaned_data['email'])
         return new_user
 
 
@@ -111,7 +112,8 @@ class RegistrationFormUniqueEmail(RegistrationForm):
         site.
         
         """
-        if User.objects.filter(email__iexact=self.cleaned_data['email']):
+        if RegistrationProfile.objects(
+            email__iexact=self.cleaned_data['email']):
             raise forms.ValidationError(_(u'This email address is already in use. Please supply a different email address.'))
         return self.cleaned_data['email']
 
@@ -138,5 +140,7 @@ class RegistrationFormNoFreeEmail(RegistrationForm):
         """
         email_domain = self.cleaned_data['email'].split('@')[1]
         if email_domain in self.bad_domains:
-            raise forms.ValidationError(_(u'Registration using free email addresses is prohibited. Please supply a different email address.'))
+            raise forms.ValidationError(
+                _(u'Registration using free email addresses is prohibited. Please supply a different email address.'))
+        
         return self.cleaned_data['email']
