@@ -26,16 +26,15 @@ for dirpath, dirnames, filenames in os.walk('registration'):
             data_files.append(os.path.join(prefix, f))
 
 
-setup(name='django-registration',
+setup(name='django-registration-me',
       version=get_version().replace(' ', '-'),
-      description='An extensible user-registration application for Django',
-      author='James Bennett',
-      author_email='james@b-list.org',
-      url='http://www.bitbucket.org/ubernostrum/django-registration/wiki/',
-      download_url='http://www.bitbucket.org/ubernostrum/django-registration/get/v0.7.gz',
-      package_dir={'registration': 'registration'},
+      description='An extensible user-registration application for Django using MongoEngine',
+      author='Serge Matveenko',
+      author_email='s@matveenko.ru',
+      url='https://github.com/lig/django-registration-me',
+      package_dir={'registration_me': 'registration'},
       packages=packages,
-      package_data={'registration': data_files},
+      package_data={'registration_me': data_files},
       classifiers=['Development Status :: 4 - Beta',
                    'Environment :: Web Environment',
                    'Framework :: Django',
