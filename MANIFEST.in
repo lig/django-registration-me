@@ -1,8 +1,9 @@
-include CHANGELOG
-include INSTALL
-include LICENSE
+include CHANGELOG.txt
+include INSTALL.txt
+include LICENSE.txt
 include MANIFEST.in
-include README
-include AUTHORS
+include README.txt
+include AUTHORS.txt
 recursive-include docs *
+recursive-include registration/bin *
 recursive-include registration/locale *
