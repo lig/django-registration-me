@@ -24,7 +24,7 @@ for dirpath, dirnames, filenames in os.walk('registration'):
 
 
 setup(name='django-registration-me',
-      version='0.7.1',
+      version='0.7.2',
       description='An extensible user-registration application for Django using MongoEngine',
       author='Serge Matveenko',
       author_email='s@matveenko.ru',
