@@ -1,7 +1,11 @@
 import datetime
 import random
 import re
-import sha
+try:
+    from hashlib import sha1
+except ImportError:
+    import sha as sha1
+
 
 from django.conf import settings
 from django.template.loader import render_to_string
@@ -177,8 +181,8 @@ class RegistrationProfile(User):
 
         """
         profile = super(cls, cls).create_user(*args, **kwargs)
-        salt = sha.new(str(random.random())).hexdigest()[:5]
-        profile.activation_key = sha.new(salt + profile.username).hexdigest()
+        salt = sha1.new(str(random.random())).hexdigest()[:5]
+        profile.activation_key = sha1.new(salt + profile.username).hexdigest()
         profile.save()
         return profile
 
