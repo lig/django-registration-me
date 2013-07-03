@@ -181,8 +181,9 @@ class RegistrationProfile(User):
 
         """
         profile = super(cls, cls).create_user(*args, **kwargs)
-        salt = sha1.new(str(random.random())).hexdigest()[:5]
-        profile.activation_key = sha1.new(salt + profile.username).hexdigest()
+        salt = sha1(str(random.random()).encode()).hexdigest()[:5]
+        profile.activation_key = sha1(
+            (salt + profile.username).encode()).hexdigest()
         profile.save()
         return profile
 
