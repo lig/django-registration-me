@@ -30,7 +30,7 @@ for dirpath, dirnames, filenames in os.walk('registration'):
 setup(
     cmdclass = {'build_py':build_py},
     name='django-registration-me',
-    version='0.7.2',
+    version='0.8',
     description='An extensible user-registration application for Django using MongoEngine',
     author='Serge Matveenko',
     author_email='s@matveenko.ru',
