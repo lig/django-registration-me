@@ -1,5 +1,5 @@
 =====================================================
-Depricated. Use https://github.com/lig/regme instead.
+Deprecated. Use https://github.com/lig/regme instead.
 =====================================================
 
 ========================
